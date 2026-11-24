@@ -327,7 +327,7 @@ allprojects  {
 }
 
 // NOTE: dynamically load all custom modules
-file("${rootDir}/custom").eachDir { companyDir ->
+file("${rootDir}/custom").listFiles()?.findAll { it.isDirectory() }?.each { companyDir ->
     if('build' != companyDir.name && 'docker' != companyDir.name) {
         file("${rootDir}/custom/${companyDir.name}").eachDir { categoryDir ->
             if('build' != categoryDir.name) {
