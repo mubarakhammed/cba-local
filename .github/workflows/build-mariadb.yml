@@ -13,13 +13,6 @@ jobs:
             env:
                 MARIADB_ROOT_PASSWORD: mysql
             options: --health-cmd="healthcheck.sh --su-mysql --connect --innodb_initialized" --health-interval=5s --health-timeout=2s --health-retries=3
-        mock-oauth2-server:
-          image: ghcr.io/navikt/mock-oauth2-server:2.1.10
-          ports:
-            - 9000:9000
-          env:
-            SERVER_PORT: 9000
-            JSON_CONFIG: '{ "interactiveLogin": true, "httpServer": "NettyWrapper", "tokenCallbacks": [ { "issuerId": "auth/realms/fineract", "tokenExpiry": 120, "requestMappings": [{ "requestParam": "scope", "match": "fineract", "claims": { "sub": "mifos", "scope": [ "test" ] } } ] } ] }'
     env:
         TZ: Asia/Kolkata
         DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
@@ -68,9 +61,7 @@ jobs:
         run: |
             ./gradlew --no-daemon --console=plain build -x cucumber -x test -x doc
             ./gradlew --no-daemon --console=plain cucumber -x :fineract-e2e-tests-runner:cucumber
-            ./gradlew --no-daemon --console=plain test -x :twofactor-tests:test -x :oauth2-test:test -x :fineract-e2e-tests-runner:test
-            ./gradlew --no-daemon --console=plain :twofactor-tests:test
-            ./gradlew --no-daemon --console=plain :oauth2-tests:test
+            ./gradlew --no-daemon --console=plain test -x :integration-tests:test
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
@@ -79,14 +70,3 @@ jobs:
           path: |
             build/reports/
             integration-tests/build/reports/
-            twofactor-tests/build/reports/
-            oauth2-tests/build/reports/
-      - name: Archive server logs
-        if: always()
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
-        with:
-          name: server-logs
-          path: |
-            integration-tests/build/cargo/
-            twofactor-tests/build/cargo/
-            oauth2-tests/build/cargo/

@@ -135,26 +135,16 @@ FINERACT_SECURITY_2FA_ENABLED=true
 ```
 
 
-<br>INSTRUCTIONS: How to build a WAR file
-============
-1. Clone the repository or download and extract the archive file to your local directory.
-2. Run `./gradlew :fineract-war:clean :fineract-war:war` to build a traditional WAR file which will be created at `fineract-war/build/libs` directory.
-3. Deploy this WAR to your Tomcat v9 Servlet Container.
-
-We recommend using the JAR instead of the WAR file deployment, because it's much easier.
-
-Note that with the 1.4 release the tenants database pool configuration changed from Tomcat DBCP in XML to an embedded Hikari, configured by environment variables, see above.
-
-
 INSTRUCTIONS: How to execute Integration Tests
 ============
-> Note that if this is the first time to access MySQL DB, then you may need to reset your password.
 
-Run the following commands:
-1. `./gradlew createDB -PdbName=fineract_tenants`
-1. `./gradlew createDB -PdbName=fineract_default`
-1. `./gradlew clean test`
+Start the source-built Fineract PostgreSQL stack before running integration tests.
 
+```sh
+./gradlew :fineract-provider:jibDockerBuild -Djib.to.image=cba-local/fineract:dev
+docker compose -f docker-compose-postgresql.yml -f docker-compose.cba-local.yml up -d --wait
+./gradlew :integration-tests:test -PdbType=postgresql
+```
 
 INSTRUCTIONS: How to run and debug in Eclipse IDE
 ============
@@ -238,69 +228,6 @@ By default SSL is enabled, but all SSL related properties are now tunable. SSL c
 You can choose now easily a different SSL keystore by setting `FINERACT_SERVER_SSL_KEY_STORE` with a path to a different (not embedded) keystore. The password can be set via `FINERACT_SERVER_SSL_KEY_STORE_PASSWORD`. See the `application.properties` file and the latest Spring Boot documentation (https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html) for more details.
 
 
-<br>TOMCAT CONFIGURATION
-====================
-
-Please refer to the `application.properties` and the official Spring Boot documentation (https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html) on how to do performance tuning for Tomcat. Note: you can set now the acceptable form POST size (default is 2MB) via environment variable `FINERACT_SERVER_TOMCAT_MAX_HTTP_FORM_POST_SIZE`.
-
-
-<br>INSTRUCTIONS: How to run on Kubernetes
-=================================
-
-<br>General Clusters
-----------------
-
-You can also run Fineract using containers on a Kubernetes cluster.
-Make sure you set up and connect to your Kubernetes cluster.
-You can follow [this](https://cwiki.apache.org/confluence/display/FINERACT/Install+and+configure+kubectl+and+Google+Cloud+SDK+on+ubuntu+16.04) guide to set up a Kubernetes cluster on GKE. Make sure to replace `apache-fineract-cn` with `apache-fineract`
-
-Now e.g. from your Google Cloud shell, run the following commands:
-
-1. `git clone https://github.com/apache/fineract.git ; cd fineract/kubernetes`
-1. `./kubectl-startup.sh`
-
-To shutdown and reset your Cluster, run:
-
-    ./kubectl-shutdown.sh
-
-Using Minikube
---------------
-
-Alternatively, you can run fineract on a local kubernetes cluster using [minikube](https://minikube.sigs.k8s.io/docs/).
-As Prerequisites, you must have `minikube` and `kubectl` installed on your machine; see
-[Minikube & Kubectl install](https://kubernetes.io/docs/tasks/tools/install-minikube/).
-
-Now to run a new Fineract instance on Minikube you can simply:
-
-1. `git clone https://github.com/apache/fineract.git ; cd fineract/kubernetes`
-1. `minikube start`
-1. `./kubectl-startup.sh`
-1. `minikube service fineract-server --url --https`
-1. Fineract is now running at the printed URL (note HTTP), which you can check e.g. using:
-
-   http --verify=no --timeout 240 --check-status get $(minikube service fineract-server --url --https)/fineract-provider/actuator/health
-
-To check the status of your containers on your local minikube Kubernetes cluster, run:
-
-    minikube dashboard
-
-You can check Fineract logs using:
-
-    kubectl logs deployment/fineract-server
-
-To shutdown and reset your cluster, run:
-
-    ./kubectl-shutdown.sh
-
-To shutdown and reset your cluster, run:
-
-    minikube ssh
-
-    sudo rm -rf /mnt/data/
-
-We have [some open issues in JIRA with Kubernetes related enhancement ideas](https://jira.apache.org/jira/browse/FINERACT-783?jql=labels%20%3D%20kubernetes%20AND%20project%20%3D%20%22Apache%20Fineract%22%20) which you are welcome to contribute to.
-
-
 INSTRUCTIONS: How to download Gradle wrapper
 ============
 The file gradle/wrapper/gradle-wrapper.jar binary is checked into this projects Git source repository,
@@ -332,7 +259,7 @@ External Events are business events, e.g.: `ClientCreated`, which might be impor
 In case of a large deployment with millions of accounts, the Close of Business Day Spring Batch job may run several hours. In order to speed up this task, remote partitioning of the job is supported. The Manager node partitions (breaks up) the COB job into smaller pieces (sub tasks) which then can be executed on multiple Worker nodes in parallel. The worker nodes are notified either by ActiveMQ or Kafka regarding their new sub tasks.
 ### Active MQ
 
-JMS based messaging is disabled by default. In `docker-compose-postgresql-activemq.yml` an example is shown where ActiveMQ is enabled. In that configuration one Spring Batch Manager instance and two Spring Batch Worker instances are created.
+JMS based messaging is disabled by default.
 Spring based events should be disabled and jms based event handling should be enabled. Furthermore, proper broker JMS URL should be configured.
 
 ```
@@ -345,10 +272,9 @@ For additional ActiveMQ related configuration please take a look to the `applica
 
 ### Kafka
 
-Kafka support also disabled by default. In `docker-compose-postgresql-kafka.yml` an example is shown where self-hosted Kafka is enabled for both External Events and Spring Batch Remote Job execution.
+Kafka support is disabled by default.
 
 During the development Fineract was tested with PLAINTEXT Kafka brokers without authentication and with AWS MSK using IAM authentication. The extra [jar file](https://github.com/aws/aws-msk-iam-auth/releases) required for IAM authentication is already added to the classpath.
-An example MSK setup can be found in `docker-compose-postgresql-kafka-msk.yml`.
 
 The full list of supported Kafka related properties are documented here: https://fineract.apache.org/docs/current/
 

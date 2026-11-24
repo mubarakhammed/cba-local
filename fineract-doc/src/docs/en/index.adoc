@@ -42,7 +42,9 @@ include::chapters/architecture/index.adoc[leveloffset=+1]
 
 include::chapters/development/index.adoc[leveloffset=+1]
 
-include::chapters/custom/index.adoc[leveloffset=+1]
+== Custom modules
+
+See the https://github.com/apache/fineract/tree/1.11.0/fineract-doc/src/docs/en/chapters/custom[upstream customization guide] and the https://github.com/apache/fineract/tree/1.11.0/custom/acme[upstream example modules].
 
 include::chapters/resilience/index.adoc[leveloffset=+1]
 

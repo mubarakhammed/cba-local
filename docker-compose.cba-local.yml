@@ -1,0 +1,16 @@
+name: cba-local
+
+services:
+  db:
+    ports: !reset []
+    volumes:
+      - cba-postgres-data:/var/lib/postgresql/data
+
+  fineract:
+    image: cba-local/fineract:dev
+    pull_policy: never
+    ports: !override
+      - "127.0.0.1:8443:8443"
+
+volumes:
+  cba-postgres-data:

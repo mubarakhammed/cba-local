@@ -59,10 +59,7 @@ include ':fineract-tax'
 include ':fineract-loan'
 include ':fineract-savings'
 include ':fineract-report'
-include ':fineract-war'
 include ':integration-tests'
-include ':twofactor-tests'
-include ':oauth2-tests'
 include ':fineract-client'
 include ':fineract-doc'
 include ':fineract-avro-schemas'
@@ -70,10 +67,8 @@ include ':fineract-e2e-tests-core'
 include ':fineract-e2e-tests-runner'
 include 'fineract-progressive-loan'
 include 'fineract-progressive-loan-embeddable-schedule-generator'
-// NOTE: custom Docker image with all custom modules included
-include ':custom:docker'
 // NOTE: dynamically load custom modules with pattern "custom -> company -> category -> module"
-file("${rootDir}/custom").eachDir { companyDir ->
+file("${rootDir}/custom").listFiles()?.findAll { it.isDirectory() }?.each { companyDir ->
     if('build' != companyDir.name && 'docker' != companyDir.name) {
         file("${rootDir}/custom/${companyDir.name}").eachDir { categoryDir ->
             if('build' != categoryDir.name) {
